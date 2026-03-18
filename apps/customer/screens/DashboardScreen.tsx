@@ -27,7 +27,7 @@ type Service = {
 
 type RootStackParamList = {
     Dashboard: undefined;
-    Services: undefined;
+    ServicesList: undefined;
     Address: { service: Service };
 };
 
@@ -122,7 +122,7 @@ export default function DashboardScreen({ navigation }: Props) {
 
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Services</Text>
-                <Pressable onPress={() => navigation.navigate("Services")} hitSlop={8}>
+                <Pressable onPress={() => navigation.navigate("ServicesList")} hitSlop={8}>
                     <Text style={styles.seeAllText}>See all</Text>
                 </Pressable>
             </View>

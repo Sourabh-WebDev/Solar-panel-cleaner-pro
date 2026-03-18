@@ -2,27 +2,62 @@ import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import { NotificationIcon } from "@/shared/components/NotificationIcon";
+import { ProfileHeader } from "@/shared/components/ProfileHeader";
 import DashboardScreen from "../screens/DashboardScreen";
 import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import RegisterScreen from "../screens/RegisterScreen";
 import ServicesScreen from "../screens/ServicesScreen";
 import SplashScreen from "../screens/SplashScreen";
-import { RootStackParamList } from "./types";
 import VerifyOTPScreen from "../screens/VerifyOTPScreen";
+import { RootStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator();
+
+type TabParamList = {
+    Dashboard: undefined;
+    Services: undefined;
+    Profile: undefined;
+};
+
+const Tab = createBottomTabNavigator<TabParamList>();
 
 function CustomerTabs() {
     return (
         <Tab.Navigator
-            screenOptions={({ route }) => ({
-                headerShown: false,
+            screenOptions={({ navigation, route }) => ({
+                headerShown: true,
+
+                // ✅ COMMON HEADER LEFT (Notification)
+                headerRight: () => (
+                    <NotificationIcon
+                        count={3}
+                        onPress={() => navigation.navigate("Notifications" as never)}
+                    />
+                ),
+
+                // ✅ COMMON HEADER TITLE (Profile)
+                headerTitle: () => (
+                    <ProfileHeader
+                        name="Anurag Verma"
+                        email="anurag@email.com"
+                        image="https://i.pravatar.cc/100"
+                    />
+                ),
+
+                headerTitleAlign: "left",
+
+                // spacing fix
+                headerLeftContainerStyle: {
+                    paddingRight: 0,
+                },
+
                 tabBarActiveTintColor: "#0C7BE0",
                 tabBarInactiveTintColor: "#7D8EA0",
+
                 tabBarIcon: ({ color, size }) => {
-                    const icons: Record<string, string> = {
+                    const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
                         Dashboard: "home-outline",
                         Services: "construct-outline",
                         Profile: "person-outline",
@@ -30,7 +65,7 @@ function CustomerTabs() {
 
                     return (
                         <Ionicons
-                            name={icons[route.name] as keyof typeof Ionicons.glyphMap}
+                            name={icons[route.name]}
                             size={size}
                             color={color}
                         />

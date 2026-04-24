@@ -1,16 +1,25 @@
-import { useEffect, useRef } from "react";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import { CompositeScreenProps } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { technicianStats } from "../../../shared/api/api";
+import TechnicianScreenHeader from "../../../shared/components/TechnicianScreenHeader";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
-import { dashboardStats, weeklyEarnings, weeklyJobs } from "../data/mockData";
-import type { TechnicianTabParamList } from "../navigation/types";
+import { dashboardStats, incomingRequests, weeklyEarnings, weeklyJobs } from "../data/mockData";
+import type { TechnicianRootStackParamList, TechnicianTabParamList } from "../navigation/types";
 
-type Props = BottomTabScreenProps<TechnicianTabParamList, "Earnings">;
+type Props = CompositeScreenProps<
+    BottomTabScreenProps<TechnicianTabParamList, "Earnings">,
+    NativeStackScreenProps<TechnicianRootStackParamList>
+>;
 
 const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
-export default function EarningsScreen({}: Props) {
+export default function EarningsScreen({ navigation }: Props) {
+    const [isOnline, setIsOnline] = useState(true);
+    const featuredRequest = incomingRequests[0];
     const maxEarning = Math.max(...weeklyEarnings);
     const heroFade = useRef(new Animated.Value(0)).current;
     const heroRise = useRef(new Animated.Value(18)).current;
@@ -46,6 +55,26 @@ export default function EarningsScreen({}: Props) {
 
     return (
         <SafeAreaView style={styles.container}>
+            {featuredRequest ? (
+                <TechnicianScreenHeader
+                    isOnline={isOnline}
+                    onOnlineChange={setIsOnline}
+                    todayEarnings={technicianStats.earnings}
+                    onNotificationPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}
+                    onProfilePress={() => navigation.navigate("Profile")}
+                    showNotification={!!featuredRequest}
+                />
+            ) : (
+                <TechnicianScreenHeader
+                    isOnline={isOnline}
+                    onOnlineChange={setIsOnline}
+                    todayEarnings={technicianStats.earnings}
+                    onNotificationPress={() => { }}
+                    onProfilePress={() => navigation.navigate("Profile")}
+                    showNotification={false}
+                />
+            )}
+
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>Earnings</Text>
                 <Text style={styles.subtitle}>Weekly payout snapshot and completed jobs performance.</Text>

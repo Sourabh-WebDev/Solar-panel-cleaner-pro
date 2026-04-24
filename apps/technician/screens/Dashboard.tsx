@@ -2,9 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { technicianStats } from "../../../shared/api/api";
+import TechnicianScreenHeader from "../../../shared/components/TechnicianScreenHeader";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
 import { useTechnicianLocation } from "../context/TechnicianLocationContext";
 import { assignedJobs, dashboardStats, incomingRequests } from "../data/mockData";
@@ -36,127 +39,185 @@ export default function DashboardScreen({ navigation }: Props) {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                <View style={styles.heroCard}>
-                    <View>
-                        <Text style={styles.heroEyebrow}>Technician dashboard</Text>
-                        <Text style={styles.heroTitle}>Ready for the next solar service run</Text>
-                    </View>
-                    <View style={styles.onlinePill}>
-                        <Text style={styles.onlineText}>{isOnline ? "Online" : "Offline"}</Text>
-                        <Switch
-                            value={isOnline}
-                            onValueChange={setIsOnline}
-                            trackColor={{ false: "#CFD7E5", true: "#9AD2B3" }}
-                            thumbColor={isOnline ? colors.success : "#fff"}
-                        />
-                    </View>
-                </View>
+        <LinearGradient colors={["#F4F7FB", "#E8EEF7"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientContainer}>
+            <SafeAreaView style={styles.container}>
+                {/* Decorative background elements */}
+                <View style={styles.decorativeBlob1} />
+                <View style={styles.decorativeBlob2} />
 
-                <View style={styles.statsGrid}>
-                    {dashboardStats.map((stat) => (
-                        <View key={stat.label} style={styles.statCard}>
-                            <Text style={styles.statLabel}>{stat.label}</Text>
-                            <Text style={styles.statValue}>{stat.value}</Text>
-                            <Text style={styles.statHelper}>{stat.helper}</Text>
+                {featuredRequest ? (
+                    <TechnicianScreenHeader
+                        isOnline={isOnline}
+                        onOnlineChange={setIsOnline}
+                        todayEarnings={technicianStats.earnings}
+                        onNotificationPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}
+                        onProfilePress={() => navigation.navigate("Profile")}
+                        showNotification={!!featuredRequest}
+                    />
+                ) : (
+                    <TechnicianScreenHeader
+                        isOnline={isOnline}
+                        onOnlineChange={setIsOnline}
+                        todayEarnings={technicianStats.earnings}
+                        onNotificationPress={() => { }}
+                        onProfilePress={() => navigation.navigate("Profile")}
+                        showNotification={false}
+                    />
+                )}
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                    <View style={styles.heroCard}>
+                        <View style={styles.heroTopRow}>
+                            <Text style={styles.heroEyebrow}>Technician dashboard</Text>
+                            <View style={[styles.heroStatusPill, isOnline && styles.heroStatusPillOnline]}>
+                                <View style={[styles.heroStatusDot, isOnline && styles.heroStatusDotOnline]} />
+                                <Text style={[styles.heroStatusText, isOnline && styles.heroStatusTextOnline]}>
+                                    {isOnline ? "Online" : "Offline"}
+                                </Text>
+                            </View>
                         </View>
-                    ))}
-                </View>
 
-                <View style={styles.locationCard}>
-                    <Text style={styles.locationTitle}>Live location</Text>
-                    <Text style={styles.locationStatus}>
-                        {isTracking ? "GPS is being sent from this device." : "GPS tracking is not active."}
-                    </Text>
-                    <Text style={styles.locationCache}>
-                        {isUsingCachedLocation ? "Location cache active" : "Live location feed active"}
-                    </Text>
-                    <Text style={styles.locationCoords}>
-                        {currentLocation
-                            ? `${currentLocation.latitude.toFixed(5)}, ${currentLocation.longitude.toFixed(5)}`
-                            : "Waiting for first coordinate"}
-                    </Text>
-                    {lastUpdatedAt ? <Text style={styles.locationMeta}>Last updated at {lastUpdatedAt}</Text> : null}
-                    {trackingError ? <Text style={styles.locationError}>{trackingError}</Text> : null}
-                    {trackingError ? (
-                        <Pressable style={styles.retryChip} onPress={() => void retryTracking()}>
-                            <Text style={styles.retryChipText}>Retry system</Text>
-                        </Pressable>
+                        <Text style={styles.heroTitle}>
+                            {isOnline ? "Ready for your next service run" : "Go online and start receiving requests"}
+                        </Text>
+                        <Text style={styles.heroSubtitle}>
+                            {isOnline
+                                ? "Requests are active. Respond quickly to keep your acceptance streak strong."
+                                : "Turn online to unlock nearby jobs and increase your daily earnings."}
+                        </Text>
+                    </View>
+
+                    <View style={styles.statsGrid}>
+                        {dashboardStats.map((stat) => (
+                            <View key={stat.label} style={styles.statCard}>
+                                <Text style={styles.statLabel}>{stat.label}</Text>
+                                <Text style={styles.statValue}>{stat.value}</Text>
+                                <Text style={styles.statHelper}>{stat.helper}</Text>
+                            </View>
+                        ))}
+                    </View>
+
+                    <View style={styles.locationCard}>
+                        <Text style={styles.locationTitle}>Live location</Text>
+                        <Text style={styles.locationStatus}>
+                            {isTracking ? "GPS is being sent from this device." : "GPS tracking is not active."}
+                        </Text>
+                        <Text style={styles.locationCache}>
+                            {isUsingCachedLocation ? "Location cache active" : "Live location feed active"}
+                        </Text>
+                        <Text style={styles.locationCoords}>
+                            {currentLocation
+                                ? `${currentLocation.latitude.toFixed(5)}, ${currentLocation.longitude.toFixed(5)}`
+                                : "Waiting for first coordinate"}
+                        </Text>
+                        {lastUpdatedAt ? <Text style={styles.locationMeta}>Last updated at {lastUpdatedAt}</Text> : null}
+                        {trackingError ? <Text style={styles.locationError}>{trackingError}</Text> : null}
+                        {trackingError ? (
+                            <Pressable style={styles.retryChip} onPress={() => void retryTracking()}>
+                                <Text style={styles.retryChipText}>Retry system</Text>
+                            </Pressable>
+                        ) : null}
+                    </View>
+
+                    {featuredRequest ? (
+                        <>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Incoming request</Text>
+                                <Pressable onPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}>
+                                    <Text style={styles.linkText}>Review</Text>
+                                </Pressable>
+                            </View>
+                            {activeAssignedJob ? (
+                                <Text style={styles.limitBanner}>
+                                    Multiple requests can arrive, but only 1 active job can be handled at a time.
+                                </Text>
+                            ) : null}
+
+                            <Pressable
+                                style={styles.requestCard}
+                                onPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}
+                            >
+                                <View>
+                                    <Text style={styles.requestService}>{featuredRequest.service}</Text>
+                                    <Text style={styles.requestMeta}>{featuredRequest.customer}</Text>
+                                    <Text style={styles.requestMeta}>{featuredRequest.distance}</Text>
+                                </View>
+                                <Text style={styles.requestPayout}>Rs {featuredRequest.payout}</Text>
+                            </Pressable>
+                        </>
                     ) : null}
-                </View>
 
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Incoming request</Text>
-                    <Pressable onPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}>
-                        <Text style={styles.linkText}>Review</Text>
-                    </Pressable>
-                </View>
-                {activeAssignedJob ? (
-                    <Text style={styles.limitBanner}>
-                        Multiple requests can arrive, but only 1 active job can be handled at a time.
-                    </Text>
-                ) : null}
+                    <Text style={styles.sectionTitle}>Active job</Text>
 
-                <Pressable
-                    style={styles.requestCard}
-                    onPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}
-                >
-                    <View>
-                        <Text style={styles.requestService}>{featuredRequest.service}</Text>
-                        <Text style={styles.requestMeta}>{featuredRequest.customer}</Text>
-                        <Text style={styles.requestMeta}>{featuredRequest.distance}</Text>
-                    </View>
-                    <Text style={styles.requestPayout}>Rs {featuredRequest.payout}</Text>
-                </Pressable>
-
-                <Text style={styles.sectionTitle}>Active job</Text>
-
-                <View style={styles.activeJobCard}>
-                    <View style={styles.activeJobTop}>
-                        <View>
-                            <Text style={styles.activeJobTitle}>{activeJob.customer}</Text>
-                            <Text style={styles.activeJobSubtitle}>{activeJob.service}</Text>
+                    <View style={styles.activeJobCard}>
+                        <View style={styles.activeJobTop}>
+                            <View>
+                                <Text style={styles.activeJobTitle}>{activeJob.customer}</Text>
+                                <Text style={styles.activeJobSubtitle}>{activeJob.service}</Text>
+                            </View>
+                            <View style={styles.statusBadge}>
+                                <Text style={styles.statusText}>{activeJob.status}</Text>
+                            </View>
                         </View>
-                        <View style={styles.statusBadge}>
-                            <Text style={styles.statusText}>{activeJob.status}</Text>
+
+                        <View style={styles.metaRow}>
+                            <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+                            <Text style={styles.metaText}>{activeJob.address}</Text>
+                        </View>
+
+                        <View style={styles.metaRow}>
+                            <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+                            <Text style={styles.metaText}>{activeJob.scheduledTime}</Text>
+                        </View>
+
+                        <View style={styles.actionRow}>
+                            <Pressable
+                                style={styles.secondaryButton}
+                                onPress={() => navigation.navigate("Map", { job: activeJob })}
+                            >
+                                <Text style={styles.secondaryText}>Open map</Text>
+                            </Pressable>
+                            <Pressable
+                                style={styles.primaryButton}
+                                onPress={() => navigation.navigate("JobProgress", { job: activeJob })}
+                            >
+                                <Text style={styles.primaryText}>Continue</Text>
+                            </Pressable>
                         </View>
                     </View>
-
-                    <View style={styles.metaRow}>
-                        <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
-                        <Text style={styles.metaText}>{activeJob.address}</Text>
-                    </View>
-
-                    <View style={styles.metaRow}>
-                        <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
-                        <Text style={styles.metaText}>{activeJob.scheduledTime}</Text>
-                    </View>
-
-                    <View style={styles.actionRow}>
-                        <Pressable
-                            style={styles.secondaryButton}
-                            onPress={() => navigation.navigate("Map", { job: activeJob })}
-                        >
-                            <Text style={styles.secondaryText}>Open map</Text>
-                        </Pressable>
-                        <Pressable
-                            style={styles.primaryButton}
-                            onPress={() => navigation.navigate("JobProgress", { job: activeJob })}
-                        >
-                            <Text style={styles.primaryText}>Continue</Text>
-                        </Pressable>
-                    </View>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        position: "relative",
+        overflow: "hidden",
+    },
+    decorativeBlob1: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "#0B6DFF",
+        opacity: 0.08,
+        top: -50,
+        right: -50,
+    },
+    decorativeBlob2: {
+        position: "absolute",
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: "#1F9D57",
+        opacity: 0.06,
+        bottom: 100,
+        left: -30,
     },
     content: {
         padding: spacing.lg,
@@ -166,35 +227,64 @@ const styles = StyleSheet.create({
         backgroundColor: "#10243E",
         borderRadius: radius.lg,
         padding: spacing.lg,
-        gap: spacing.lg,
+        gap: spacing.sm,
         ...shadow,
+    },
+    heroTopRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: spacing.sm,
     },
     heroEyebrow: {
         color: "#9DB1CC",
         fontSize: typography.caption,
         fontWeight: "700",
         textTransform: "uppercase",
+        flex: 1,
     },
-    heroTitle: {
-        marginTop: spacing.sm,
-        color: "#fff",
-        fontSize: 26,
-        fontWeight: "900",
-        lineHeight: 32,
-    },
-    onlinePill: {
-        backgroundColor: "#FFFFFF12",
-        borderRadius: radius.md,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
+    heroStatusPill: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
+        gap: 6,
+        backgroundColor: "#FFFFFF14",
+        borderRadius: radius.pill,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 6,
     },
-    onlineText: {
+    heroStatusPillOnline: {
+        backgroundColor: "#D9F5E6",
+    },
+    heroStatusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: "#F04438",
+    },
+    heroStatusDotOnline: {
+        backgroundColor: colors.success,
+    },
+    heroStatusText: {
+        color: "#FFD5D2",
+        fontSize: 12,
+        fontWeight: "800",
+    },
+    heroStatusTextOnline: {
+        color: "#085D3A",
+    },
+    heroTitle: {
+        marginTop: spacing.xs,
         color: "#fff",
+        fontSize: typography.h3,
+        fontWeight: "900",
+        lineHeight: 30,
+    },
+    heroSubtitle: {
+        marginTop: 6,
+        color: "#C8D5E8",
         fontSize: typography.body,
-        fontWeight: "700",
+        fontWeight: "500",
+        lineHeight: 20,
     },
     statsGrid: {
         flexDirection: "row",

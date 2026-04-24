@@ -1,4 +1,6 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
 
@@ -22,24 +24,58 @@ const notifications = [
 
 export default function NotificationsScreen() {
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Notifications</Text>
-            <Text style={styles.subtitle}>Recent updates about bookings and offers.</Text>
+        <LinearGradient colors={["#F4F7FB", "#E8EEF7"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientContainer}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.decorativeBlob1} />
+                <View style={styles.decorativeBlob2} />
+                <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                    <Text style={styles.title}>Notifications</Text>
+                    <Text style={styles.subtitle}>Recent updates about bookings and offers.</Text>
 
-            {notifications.map((item) => (
-                <View key={item.id} style={styles.card}>
-                    <Text style={styles.cardTitle}>{item.title}</Text>
-                    <Text style={styles.cardBody}>{item.body}</Text>
-                </View>
-            ))}
-        </ScrollView>
+                    {notifications.map((item) => (
+                        <View key={item.id} style={styles.card}>
+                            <Text style={styles.cardTitle}>{item.title}</Text>
+                            <Text style={styles.cardBody}>{item.body}</Text>
+                        </View>
+                    ))}
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        position: "relative",
+        overflow: "hidden",
+    },
+    decorativeBlob1: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "#0B6DFF",
+        opacity: 0.08,
+        top: -50,
+        right: -50,
+    },
+    decorativeBlob2: {
+        position: "absolute",
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: "#1F9D57",
+        opacity: 0.06,
+        bottom: 100,
+        left: -30,
+    },
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        zIndex: 1,
     },
     content: {
         padding: spacing.lg,

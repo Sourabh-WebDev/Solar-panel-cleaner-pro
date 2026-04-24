@@ -1,8 +1,11 @@
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { technicianStats } from "../../../shared/api/api";
+import TechnicianScreenHeader from "../../../shared/components/TechnicianScreenHeader";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
 import { assignedJobs, incomingRequests } from "../data/mockData";
 import type { TechnicianRootStackParamList, TechnicianTabParamList } from "../navigation/types";
@@ -13,12 +16,33 @@ type Props = CompositeScreenProps<
 >;
 
 export default function JobsScreen({ navigation }: Props) {
+    const [isOnline, setIsOnline] = useState(true);
     const activeAssignedJob = assignedJobs.find(
         (job) => job.status === "Accepted" || job.status === "In Progress"
     );
+    const featuredRequest = incomingRequests[0];
 
     return (
         <SafeAreaView style={styles.container}>
+            {featuredRequest ? (
+                <TechnicianScreenHeader
+                    isOnline={isOnline}
+                    onOnlineChange={setIsOnline}
+                    todayEarnings={technicianStats.earnings}
+                    onNotificationPress={() => navigation.navigate("JobRequestPopup", { job: featuredRequest })}
+                    onProfilePress={() => navigation.navigate("Profile")}
+                    showNotification={!!featuredRequest}
+                />
+            ) : (
+                <TechnicianScreenHeader
+                    isOnline={isOnline}
+                    onOnlineChange={setIsOnline}
+                    todayEarnings={technicianStats.earnings}
+                    onNotificationPress={() => { }}
+                    onProfilePress={() => navigation.navigate("Profile")}
+                    showNotification={false}
+                />
+            )}
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>Jobs</Text>
                 <Text style={styles.subtitle}>Track new requests and jump into active field work.</Text>

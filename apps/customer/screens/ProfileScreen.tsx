@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -14,8 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useCustomerProfile, type CustomerProfile } from "../context/CustomerProfileContext";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
+import { useCustomerProfile, type CustomerProfile } from "../context/CustomerProfileContext";
 
 export default function ProfileScreen() {
     const navigation = useNavigation<any>();
@@ -131,148 +132,176 @@ export default function ProfileScreen() {
         .join("");
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <ScrollView
-                style={styles.container}
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.heroCard}>
-                    <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
-                        {form.avatarUri ? (
-                            <Image source={{ uri: form.avatarUri }} style={styles.avatar} />
-                        ) : (
-                            <View style={[styles.avatar, styles.avatarFallback]}>
-                                <Text style={styles.avatarText}>{initials || "CU"}</Text>
-                            </View>
-                        )}
+        <LinearGradient colors={["#F4F7FB", "#E8EEF7"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientContainer}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.decorativeBlob1} />
+                <View style={styles.decorativeBlob2} />
+                <ScrollView
+                    style={styles.container}
+                    contentContainerStyle={styles.content}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.heroCard}>
+                        <Pressable onPress={handlePickImage} style={styles.avatarWrap}>
+                            {form.avatarUri ? (
+                                <Image source={{ uri: form.avatarUri }} style={styles.avatar} />
+                            ) : (
+                                <View style={[styles.avatar, styles.avatarFallback]}>
+                                    <Text style={styles.avatarText}>{initials || "CU"}</Text>
+                                </View>
+                            )}
 
-                        <View style={styles.cameraBadge}>
-                            <Ionicons name="camera-outline" size={14} color="#fff" />
+                            <View style={styles.cameraBadge}>
+                                <Ionicons name="camera-outline" size={14} color="#fff" />
+                            </View>
+                        </Pressable>
+
+                        <View style={styles.heroCopy}>
+                            <Text style={styles.name}>{form.fullName}</Text>
+                            <Text style={styles.helperText}>
+                                Tap the profile photo to change it
+                            </Text>
                         </View>
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Basic Details</Text>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Full Name</Text>
+                            <TextInput
+                                value={form.fullName}
+                                onChangeText={(value) => updateField("fullName", value)}
+                                placeholder="Enter full name"
+                                placeholderTextColor={colors.textSecondary}
+                                style={styles.input}
+                            />
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Email</Text>
+                            <TextInput
+                                value={form.email}
+                                onChangeText={(value) => updateField("email", value)}
+                                placeholder="Enter email"
+                                placeholderTextColor={colors.textSecondary}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                style={styles.input}
+                            />
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Phone Number</Text>
+                            <View style={[styles.input, styles.readOnlyInput]}>
+                                <Text style={styles.readOnlyText}>{form.phone}</Text>
+                                <Text style={styles.readOnlyBadge}>Not Editable</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Current / Manual Location</Text>
+                            <TextInput
+                                value={form.location}
+                                onChangeText={(value) => updateField("location", value)}
+                                placeholder="Enter location manually"
+                                placeholderTextColor={colors.textSecondary}
+                                style={styles.input}
+                            />
+                            <Pressable
+                                style={[styles.secondaryButton, fetchingLocation && styles.secondaryButtonDisabled]}
+                                onPress={handleUseCurrentLocation}
+                                disabled={fetchingLocation}
+                            >
+                                <Ionicons name="locate-outline" size={18} color={colors.primary} />
+                                <Text style={styles.secondaryButtonText}>
+                                    {fetchingLocation ? "Fetching Location..." : "Use Current Location"}
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>Address</Text>
+                            <TextInput
+                                value={form.address}
+                                onChangeText={(value) => updateField("address", value)}
+                                placeholder="Enter address"
+                                placeholderTextColor={colors.textSecondary}
+                                multiline
+                                style={[styles.input, styles.textArea]}
+                            />
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>City</Text>
+                            <TextInput
+                                value={form.city}
+                                onChangeText={(value) => updateField("city", value)}
+                                placeholder="Enter city"
+                                placeholderTextColor={colors.textSecondary}
+                                style={styles.input}
+                            />
+                        </View>
+
+                        <View style={styles.fieldGroup}>
+                            <Text style={styles.label}>State</Text>
+                            <TextInput
+                                value={form.state}
+                                onChangeText={(value) => updateField("state", value)}
+                                placeholder="Enter state"
+                                placeholderTextColor={colors.textSecondary}
+                                style={styles.input}
+                            />
+                        </View>
+                    </View>
+
+                    <Pressable style={styles.primaryButton} onPress={handleSave}>
+                        <Ionicons name="save-outline" size={18} color="#fff" />
+                        <Text style={styles.primaryButtonText}>Save Changes</Text>
                     </Pressable>
 
-                    <View style={styles.heroCopy}>
-                        <Text style={styles.name}>{form.fullName}</Text>
-                        <Text style={styles.helperText}>
-                            Tap the profile photo to change it
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Basic Details</Text>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Full Name</Text>
-                        <TextInput
-                            value={form.fullName}
-                            onChangeText={(value) => updateField("fullName", value)}
-                            placeholder="Enter full name"
-                            placeholderTextColor={colors.textSecondary}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Email</Text>
-                        <TextInput
-                            value={form.email}
-                            onChangeText={(value) => updateField("email", value)}
-                            placeholder="Enter email"
-                            placeholderTextColor={colors.textSecondary}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Phone Number</Text>
-                        <View style={[styles.input, styles.readOnlyInput]}>
-                            <Text style={styles.readOnlyText}>{form.phone}</Text>
-                            <Text style={styles.readOnlyBadge}>Not Editable</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Current / Manual Location</Text>
-                        <TextInput
-                            value={form.location}
-                            onChangeText={(value) => updateField("location", value)}
-                            placeholder="Enter location manually"
-                            placeholderTextColor={colors.textSecondary}
-                            style={styles.input}
-                        />
-                        <Pressable
-                            style={[styles.secondaryButton, fetchingLocation && styles.secondaryButtonDisabled]}
-                            onPress={handleUseCurrentLocation}
-                            disabled={fetchingLocation}
-                        >
-                            <Ionicons name="locate-outline" size={18} color={colors.primary} />
-                            <Text style={styles.secondaryButtonText}>
-                                {fetchingLocation ? "Fetching Location..." : "Use Current Location"}
-                            </Text>
-                        </Pressable>
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Address</Text>
-                        <TextInput
-                            value={form.address}
-                            onChangeText={(value) => updateField("address", value)}
-                            placeholder="Enter address"
-                            placeholderTextColor={colors.textSecondary}
-                            multiline
-                            style={[styles.input, styles.textArea]}
-                        />
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>City</Text>
-                        <TextInput
-                            value={form.city}
-                            onChangeText={(value) => updateField("city", value)}
-                            placeholder="Enter city"
-                            placeholderTextColor={colors.textSecondary}
-                            style={styles.input}
-                        />
-                    </View>
-
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>State</Text>
-                        <TextInput
-                            value={form.state}
-                            onChangeText={(value) => updateField("state", value)}
-                            placeholder="Enter state"
-                            placeholderTextColor={colors.textSecondary}
-                            style={styles.input}
-                        />
-                    </View>
-                </View>
-
-                <Pressable style={styles.primaryButton} onPress={handleSave}>
-                    <Ionicons name="save-outline" size={18} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Save Changes</Text>
-                </Pressable>
-
-                <Pressable style={styles.logoutButton} onPress={handleLogout}>
-                    <Ionicons name="log-out-outline" size={18} color="#D64545" />
-                    <Text style={styles.logoutText}>Logout</Text>
-                </Pressable>
-            </ScrollView>
-        </SafeAreaView>
+                    <Pressable style={styles.logoutButton} onPress={handleLogout}>
+                        <Ionicons name="log-out-outline" size={18} color="#D64545" />
+                        <Text style={styles.logoutText}>Logout</Text>
+                    </Pressable>
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     safeArea: {
         flex: 1,
-        backgroundColor: colors.background,
+        position: "relative",
+        overflow: "hidden",
+    },
+    decorativeBlob1: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "#0B6DFF",
+        opacity: 0.08,
+        top: -50,
+        right: -50,
+    },
+    decorativeBlob2: {
+        position: "absolute",
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: "#1F9D57",
+        opacity: 0.06,
+        bottom: 100,
+        left: -30,
     },
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        zIndex: 1,
     },
     content: {
         padding: spacing.lg,

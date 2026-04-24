@@ -2,51 +2,96 @@ import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import { useEffect, useRef } from "react";
+import { Animated, Pressable, StyleSheet, Vibration, View } from "react-native";
 
-import type { TechnicianRootStackParamList, TechnicianTabParamList } from "./types";
+import { colors, shadow, spacing } from "../../../shared/utils/ui";
 import { TechnicianLocationProvider } from "../context/TechnicianLocationContext";
 import { incomingRequests } from "../data/mockData";
-import Dashboard from "../screens/Dashboard";
 import CancelJobWarningScreen from "../screens/CancelJobWarningScreen";
+import Dashboard from "../screens/Dashboard";
 import EarningsScreen from "../screens/EarningsScreen";
 import JobDetailsScreen from "../screens/JobDetailsScreen";
 import JobProgressScreen from "../screens/JobProgressScreen";
 import JobRequestPopup from "../screens/JobRequestPopup";
 import JobsScreen from "../screens/JobsScreen";
-import LoginScreen from "../screens/LoginScreen";
 import LocationPermissionScreen from "../screens/LocationPermissionScreen";
+import LoginScreen from "../screens/LoginScreen";
 import MapScreen from "../screens/MapScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import SplashScreen from "../screens/SplashScreen";
-import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
+import type { TechnicianRootStackParamList, TechnicianTabParamList } from "./types";
 
 const Stack = createNativeStackNavigator<TechnicianRootStackParamList>();
 const Tab = createBottomTabNavigator<TechnicianTabParamList>();
+const REQUEST_ALERT_SOUND =
+    "data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA";
 
 function FloatingRequestBubble() {
     const navigation = useNavigation<NavigationProp<TechnicianRootStackParamList>>();
     const request = incomingRequests[0];
+    const shakeX = useRef(new Animated.Value(0)).current;
+    const lastRequestId = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!request) {
+            return;
+        }
+
+        if (lastRequestId.current === request.id) {
+            return;
+        }
+
+        lastRequestId.current = request.id;
+        let player: ReturnType<typeof createAudioPlayer> | null = null;
+
+        const playAlert = async () => {
+            try {
+                await setAudioModeAsync({
+                    playsInSilentMode: true,
+                    shouldPlayInBackground: false,
+                });
+                player = createAudioPlayer({ uri: REQUEST_ALERT_SOUND });
+                player.volume = 1;
+                player.play();
+            } catch {
+                Vibration.vibrate(300);
+            }
+        };
+
+        void playAlert();
+
+        Animated.sequence([
+            Animated.timing(shakeX, { toValue: -8, duration: 45, useNativeDriver: true }),
+            Animated.timing(shakeX, { toValue: 8, duration: 45, useNativeDriver: true }),
+            Animated.timing(shakeX, { toValue: -6, duration: 45, useNativeDriver: true }),
+            Animated.timing(shakeX, { toValue: 6, duration: 45, useNativeDriver: true }),
+            Animated.timing(shakeX, { toValue: 0, duration: 45, useNativeDriver: true }),
+        ]).start();
+
+        return () => {
+            if (player) {
+                player.remove();
+            }
+        };
+    }, [request, shakeX]);
 
     if (!request) {
         return null;
     }
 
     return (
-        <Pressable
-            style={styles.floatingBubble}
-            onPress={() => navigation.navigate("JobRequestPopup", { job: request })}
-        >
-            <View style={styles.floatingIcon}>
-                <Ionicons name="notifications-outline" size={20} color="#fff" />
-            </View>
-            <View style={styles.floatingTextWrap}>
-                <Text style={styles.floatingTitle}>Request incoming</Text>
-                <Text style={styles.floatingSubtitle} numberOfLines={1}>
-                    Tap to review like a quick bubble flow
-                </Text>
-            </View>
-        </Pressable>
+        <Animated.View style={[styles.floatingWrap, { transform: [{ translateX: shakeX }] }]}>
+            <Pressable
+                style={styles.floatingBubble}
+                onPress={() => navigation.navigate("JobRequestPopup", { job: request })}
+            >
+                <View style={styles.floatingIcon}>
+                    <Ionicons name="notifications-outline" size={22} color="#fff" />
+                </View>
+            </Pressable>
+        </Animated.View>
     );
 }
 
@@ -125,39 +170,28 @@ const styles = StyleSheet.create({
     tabsContainer: {
         flex: 1,
     },
-    floatingBubble: {
+    floatingWrap: {
         position: "absolute",
         right: spacing.md,
         bottom: 88,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.sm,
-        maxWidth: 240,
+    },
+    floatingBubble: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: "#10243E",
-        borderRadius: radius.pill,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+        borderColor: "#1D3556",
         ...shadow,
     },
     floatingIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: colors.primary,
         alignItems: "center",
         justifyContent: "center",
-    },
-    floatingTextWrap: {
-        flexShrink: 1,
-    },
-    floatingTitle: {
-        color: "#fff",
-        fontSize: typography.caption,
-        fontWeight: "800",
-    },
-    floatingSubtitle: {
-        marginTop: 2,
-        color: "#C8D6EA",
-        fontSize: 11,
     },
 });

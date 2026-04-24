@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
 import {
     Image,
@@ -12,6 +13,7 @@ import {
     type NativeScrollEvent,
     type NativeSyntheticEvent
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { services } from "../../../shared/api/api";
@@ -104,144 +106,178 @@ export default function DashboardScreen({ navigation }: Props) {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-        >
-            <View style={styles.searchBox}>
-                <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
-                <TextInput
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search services"
-                    placeholderTextColor={colors.textSecondary}
-                    style={styles.searchInput}
-                />
-            </View>
-
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Services</Text>
-                <Pressable onPress={() => navigation.navigate("ServicesList")} hitSlop={8}>
-                    <Text style={styles.seeAllText}>See all</Text>
-                </Pressable>
-            </View>
-
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.servicesRow}
-            >
-                {miniServices.map((service) => {
-                    const meta = serviceMeta[service.id];
-
-                    return (
-                        <Pressable
-                            key={service.id}
-                            style={styles.smallServiceCard}
-                            onPress={() => navigation.navigate("Address", { service })}
-                        >
-                            <View style={styles.smallServiceIconWrap}>
-                                <Image source={service.image} style={styles.smallServiceImage} />
-                            </View>
-                            <Text style={styles.smallServiceName} numberOfLines={2}>
-                                {service.name}
-                            </Text>
-                            <View style={styles.smallServiceMeta}>
-                                <MaterialCommunityIcons name={meta?.icon ?? "star"} size={12} color={colors.primary} />
-                                <Text style={styles.smallServiceMetaText}>{meta?.duration ?? "45 min"}</Text>
-                            </View>
-                        </Pressable>
-                    );
-                })}
-            </ScrollView>
-
-            <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onScroll={handleBannerScroll}
-                scrollEventThrottle={16}
-                decelerationRate="fast"
-                snapToInterval={bannerCardWidth}
-                contentContainerStyle={styles.bannerRow}
-            >
-                {bannerSlides.map((banner) => (
-                    <View
-                        key={banner.id}
-                        style={[
-                            styles.bannerCard,
-                            {
-                                width: bannerCardWidth,
-                                backgroundColor: banner.colors[0]
-                            }
-                        ]}
-                    >
-                        <View style={styles.bannerBadge}>
-                            <Text style={styles.bannerBadgeText}>{banner.highlight}</Text>
-                        </View>
-                        <Text style={styles.bannerTitle}>{banner.title}</Text>
-                        <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
+        <LinearGradient colors={["#F4F7FB", "#E8EEF7"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientContainer}>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.decorativeBlob1} />
+                <View style={styles.decorativeBlob2} />
+                <ScrollView
+                    style={styles.container}
+                    contentContainerStyle={styles.content}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.searchBox}>
+                        <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
+                        <TextInput
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            placeholder="Search services"
+                            placeholderTextColor={colors.textSecondary}
+                            style={styles.searchInput}
+                        />
                     </View>
-                ))}
-            </ScrollView>
 
-            <View style={styles.dotsRow}>
-                {bannerSlides.map((banner, index) => (
-                    <View
-                        key={banner.id}
-                        style={[
-                            styles.dot,
-                            index === activeBannerIndex && styles.activeDot
-                        ]}
-                    />
-                ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>Popular Services</Text>
-
-            <View style={styles.popularGrid}>
-                {popularServices.map((service) => {
-                    const meta = serviceMeta[service.id];
-
-                    return (
-                        <Pressable
-                            key={service.id}
-                            style={styles.popularCard}
-                            onPress={() => navigation.navigate("Address", { service })}
-                        >
-                            <Image source={service.image} style={styles.popularImage} />
-
-                            <View style={styles.ratingRow}>
-                                <MaterialCommunityIcons name="star" size={14} color="#F5A623" />
-                                <Text style={styles.ratingText}>{meta?.rating ?? 4.8}</Text>
-                            </View>
-
-                            <Text style={styles.popularName} numberOfLines={2}>
-                                {service.name}
-                            </Text>
-
-                            <View style={styles.infoRow}>
-                                <MaterialCommunityIcons name="clock-outline" size={14} color={colors.textSecondary} />
-                                <Text style={styles.infoText}>{meta?.duration ?? "45 min"}</Text>
-                            </View>
-
-                            <View style={styles.priceRow}>
-                                <Text style={styles.priceLabel}>Starting at</Text>
-                                <Text style={styles.priceText}>Rs {service.price}</Text>
-                            </View>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Services</Text>
+                        <Pressable onPress={() => navigation.navigate("ServicesList")} hitSlop={8}>
+                            <Text style={styles.seeAllText}>See all</Text>
                         </Pressable>
-                    );
-                })}
-            </View>
-        </ScrollView>
+                    </View>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.servicesRow}
+                    >
+                        {miniServices.map((service) => {
+                            const meta = serviceMeta[service.id];
+
+                            return (
+                                <Pressable
+                                    key={service.id}
+                                    style={styles.smallServiceCard}
+                                    onPress={() => navigation.navigate("Address", { service })}
+                                >
+                                    <View style={styles.smallServiceIconWrap}>
+                                        <Image source={service.image} style={styles.smallServiceImage} />
+                                    </View>
+                                    <Text style={styles.smallServiceName} numberOfLines={2}>
+                                        {service.name}
+                                    </Text>
+                                    <View style={styles.smallServiceMeta}>
+                                        <MaterialCommunityIcons name={meta?.icon ?? "star"} size={12} color={colors.primary} />
+                                        <Text style={styles.smallServiceMetaText}>{meta?.duration ?? "45 min"}</Text>
+                                    </View>
+                                </Pressable>
+                            );
+                        })}
+                    </ScrollView>
+
+                    <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={handleBannerScroll}
+                        scrollEventThrottle={16}
+                        decelerationRate="fast"
+                        snapToInterval={bannerCardWidth}
+                        contentContainerStyle={styles.bannerRow}
+                    >
+                        {bannerSlides.map((banner) => (
+                            <View
+                                key={banner.id}
+                                style={[
+                                    styles.bannerCard,
+                                    {
+                                        width: bannerCardWidth,
+                                        backgroundColor: banner.colors[0]
+                                    }
+                                ]}
+                            >
+                                <View style={styles.bannerBadge}>
+                                    <Text style={styles.bannerBadgeText}>{banner.highlight}</Text>
+                                </View>
+                                <Text style={styles.bannerTitle}>{banner.title}</Text>
+                                <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+
+                    <View style={styles.dotsRow}>
+                        {bannerSlides.map((banner, index) => (
+                            <View
+                                key={banner.id}
+                                style={[
+                                    styles.dot,
+                                    index === activeBannerIndex && styles.activeDot
+                                ]}
+                            />
+                        ))}
+                    </View>
+
+                    <Text style={styles.sectionTitle}>Popular Services</Text>
+
+                    <View style={styles.popularGrid}>
+                        {popularServices.map((service) => {
+                            const meta = serviceMeta[service.id];
+
+                            return (
+                                <Pressable
+                                    key={service.id}
+                                    style={styles.popularCard}
+                                    onPress={() => navigation.navigate("Address", { service })}
+                                >
+                                    <Image source={service.image} style={styles.popularImage} />
+
+                                    <View style={styles.ratingRow}>
+                                        <MaterialCommunityIcons name="star" size={14} color="#F5A623" />
+                                        <Text style={styles.ratingText}>{meta?.rating ?? 4.8}</Text>
+                                    </View>
+
+                                    <Text style={styles.popularName} numberOfLines={2}>
+                                        {service.name}
+                                    </Text>
+
+                                    <View style={styles.infoRow}>
+                                        <MaterialCommunityIcons name="clock-outline" size={14} color={colors.textSecondary} />
+                                        <Text style={styles.infoText}>{meta?.duration ?? "45 min"}</Text>
+                                    </View>
+
+                                    <View style={styles.priceRow}>
+                                        <Text style={styles.priceLabel}>Starting at</Text>
+                                        <Text style={styles.priceText}>Rs {service.price}</Text>
+                                    </View>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        position: "relative",
+        overflow: "hidden",
+    },
+    decorativeBlob1: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "#0B6DFF",
+        opacity: 0.08,
+        top: -50,
+        right: -50,
+    },
+    decorativeBlob2: {
+        position: "absolute",
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: "#1F9D57",
+        opacity: 0.06,
+        bottom: 100,
+        left: -30,
+    },
     container: {
         flex: 1,
-        backgroundColor: colors.background
+        zIndex: 1,
     },
 
     content: {

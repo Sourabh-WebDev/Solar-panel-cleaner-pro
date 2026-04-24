@@ -1,5 +1,5 @@
-import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, Vibration, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +17,7 @@ export default function JobRequestPopup({ navigation, route }: Props) {
     const commission = Math.round(job.payout * 0.1);
     const rupee = "\u20B9";
     const [countdown, setCountdown] = useState(20);
+    const isUrgent = countdown <= 5;
     const activeAssignedJob = assignedJobs.find(
         (assignedJob) =>
             assignedJob.status === "Accepted" || assignedJob.status === "In Progress"
@@ -91,9 +92,22 @@ export default function JobRequestPopup({ navigation, route }: Props) {
             <Pressable style={styles.backdrop} onPress={() => navigation.goBack()} />
 
             <View style={styles.sheet}>
-                <Text style={styles.heading}>New Request</Text>
-                <View style={styles.countdownPill}>
-                    <Text style={styles.countdownText}>Auto close in {countdown}s</Text>
+                <View style={styles.grabber} />
+
+                <View style={styles.headerRow}>
+                    <View style={styles.headerTextWrap}>
+                        <Text style={styles.heading}>New Job Request</Text>
+                        <Text style={styles.subHeading}>Review details before accepting</Text>
+                    </View>
+                    <View style={styles.statusBadge}>
+                        <Text style={styles.statusBadgeText}>{job.id}</Text>
+                    </View>
+                </View>
+
+                <View style={[styles.countdownPill, isUrgent && styles.countdownPillUrgent]}>
+                    <Text style={[styles.countdownText, isUrgent && styles.countdownTextUrgent]}>
+                        Auto close in {countdown}s
+                    </Text>
                 </View>
 
                 <View style={styles.metricCard}>
@@ -117,8 +131,11 @@ export default function JobRequestPopup({ navigation, route }: Props) {
                     </View>
                 </View>
 
-                <Text style={styles.metaText}>{job.customer}</Text>
-                <Text style={styles.metaText}>{job.address}</Text>
+                <View style={styles.customerCard}>
+                    <Text style={styles.customerName}>{job.customer}</Text>
+                    <Text style={styles.metaText}>{job.address}</Text>
+                </View>
+
                 {activeAssignedJob ? (
                     <View style={styles.limitCard}>
                         <Text style={styles.limitTitle}>1 active job at a time</Text>
@@ -140,7 +157,7 @@ export default function JobRequestPopup({ navigation, route }: Props) {
                                 navigation.replace("Map", { job: { ...job, status: "Accepted" } });
                             }}
                         >
-                            <Text style={styles.primaryText}>ACCEPT</Text>
+                            <Text style={styles.primaryText}>Accept</Text>
                         </Pressable>
                     </Animated.View>
                 </View>
@@ -152,43 +169,86 @@ export default function JobRequestPopup({ navigation, route }: Props) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        justifyContent: "center",
-        backgroundColor: "#0E1E324D",
-        padding: spacing.lg,
+        justifyContent: "flex-end",
+        backgroundColor: "#07142766",
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.md,
     },
     backdrop: {
         ...StyleSheet.absoluteFillObject,
     },
     sheet: {
         backgroundColor: colors.surface,
-        borderRadius: 28,
+        borderRadius: 26,
         padding: spacing.lg,
         gap: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
         ...shadow,
+    },
+    grabber: {
+        alignSelf: "center",
+        width: 46,
+        height: 5,
+        borderRadius: radius.pill,
+        backgroundColor: "#D2DBE8",
+    },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: spacing.sm,
+    },
+    headerTextWrap: {
+        flex: 1,
+        gap: 2,
     },
     heading: {
         color: colors.textPrimary,
-        fontSize: 26,
+        fontSize: typography.h2,
         fontWeight: "900",
-        textAlign: "center",
     },
-    countdownPill: {
-        alignSelf: "center",
+    subHeading: {
+        color: colors.textSecondary,
+        fontSize: typography.caption,
+    },
+    statusBadge: {
         backgroundColor: colors.chip,
         borderRadius: radius.pill,
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.sm,
         paddingVertical: 8,
+    },
+    statusBadgeText: {
+        color: colors.primary,
+        fontSize: 12,
+        fontWeight: "800",
+    },
+    countdownPill: {
+        alignSelf: "flex-start",
+        backgroundColor: "#EAF2FF",
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 7,
+        borderWidth: 1,
+        borderColor: "#D2E2FF",
+    },
+    countdownPillUrgent: {
+        backgroundColor: "#FFF3F1",
+        borderColor: "#F3C9C5",
     },
     countdownText: {
         color: colors.primary,
         fontSize: typography.caption,
         fontWeight: "800",
     },
+    countdownTextUrgent: {
+        color: "#B42318",
+    },
     metricCard: {
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: radius.lg,
-        padding: spacing.md,
+        padding: spacing.sm,
         gap: spacing.sm,
         backgroundColor: colors.background,
     },
@@ -212,10 +272,23 @@ const styles = StyleSheet.create({
         fontSize: typography.h3,
         fontWeight: "900",
     },
+    customerCard: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.md,
+        padding: spacing.sm,
+        backgroundColor: "#FAFCFF",
+    },
+    customerName: {
+        color: colors.textPrimary,
+        fontSize: typography.body,
+        fontWeight: "800",
+        marginBottom: 4,
+    },
     metaText: {
         color: colors.textSecondary,
         fontSize: typography.caption,
-        textAlign: "center",
+        lineHeight: 18,
     },
     limitCard: {
         backgroundColor: "#FFF3F1",
@@ -241,18 +314,21 @@ const styles = StyleSheet.create({
         alignItems: "stretch",
     },
     secondaryButton: {
-        flex: 0.8,
+        flex: 1,
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: radius.md,
+        backgroundColor: "#F8FAFD",
         paddingVertical: 14,
         alignItems: "center",
+        justifyContent: "center",
+        minHeight: 64,
     },
     primaryWrap: {
-        flex: 1.2,
+        flex: 1,
     },
     secondaryText: {
-        color: colors.textPrimary,
+        color: "#7A271A",
         fontSize: typography.body,
         fontWeight: "800",
     },

@@ -1,22 +1,45 @@
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect } from "react";
 import { ImageBackground } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { getCurrentAuthSession } from "../../../shared/services/auth";
 import { RootStackParamList } from "../navigation/types";
 
 export default function SplashScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        let cancelled = false;
+
+        const decideRoute = async () => {
+            const session = await getCurrentAuthSession();
+            if (cancelled) {
+                return;
+            }
+
+            if (session.isLoggedIn && session.role === "customer") {
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: "MainTabs" as never }],
+                });
+                return;
+            }
+
             navigation.reset({
                 index: 0,
                 routes: [{ name: "Login" as never }],
             });
-        }, 1500);
+        };
 
-        return () => clearTimeout(timer);
+        const timer = setTimeout(() => {
+            void decideRoute();
+        }, 900);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [navigation]);
 
     return (

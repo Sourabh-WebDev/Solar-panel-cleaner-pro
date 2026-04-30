@@ -15,18 +15,21 @@ import {
     View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { resendOtp, sendOtp, verifyOtp } from "../../../shared/services/auth";
 import { useTechnicianLocation } from "../context/TechnicianLocationContext";
 import type { TechnicianRootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<TechnicianRootStackParamList, "VerifyOTP">;
 
 export default function VerifyOTPScreen({ route, navigation }: Props) {
-    const { phone } = route.params;
+    const { phone, devOtp } = route.params;
 
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
     const [error, setError] = useState("");
     const [secondsLeft, setSecondsLeft] = useState(120);
+    const [otpRequestId, setOtpRequestId] = useState(route.params.otpRequestId);
+    const [debugOtp, setDebugOtp] = useState(devOtp ?? "");
 
     const formTranslateY = useRef(new Animated.Value(0)).current;
     const otpInputRef = useRef<TextInput>(null);
@@ -55,7 +58,7 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
     }, []);
 
     const handleVerify = async () => {
-        if (!otp.trim()) {
+        if (otp.trim().length !== 4) {
             setError("Enter OTP");
             return;
         }
@@ -63,15 +66,53 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
         setError("");
         setVerifying(true);
 
-        await requestPermissionAndStartTracking();
+        const result = await verifyOtp({
+            requestId: otpRequestId,
+            otp,
+            role: "technician",
+        });
+
+        if (!result.ok) {
+            setVerifying(false);
+            setError(result.message ?? "OTP verification failed");
+            return;
+        }
+
+        const started = await requestPermissionAndStartTracking();
+
+        if (!started) {
+            setVerifying(false);
+            setError("Location permission is required to continue.");
+            return;
+        }
 
         setVerifying(false);
         navigation.reset({ index: 0, routes: [{ name: "MainTabs" }] });
     };
 
-    const handleResend = () => {
-        setError("");
-        setSecondsLeft(120);
+    const handleResend = async () => {
+        try {
+            setError("");
+            const resent = await resendOtp(otpRequestId);
+            setOtpRequestId(resent.requestId);
+            setSecondsLeft(resent.expiresInSec);
+            setDebugOtp(resent.devOtp ?? "");
+            setOtp("");
+            return;
+        } catch {
+            // If old request expired, create a new OTP request.
+        }
+
+        try {
+            const created = await sendOtp({ phone, role: "technician" });
+            setOtpRequestId(created.requestId);
+            setSecondsLeft(created.expiresInSec);
+            setDebugOtp(created.devOtp ?? "");
+            setOtp("");
+            setError("");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to resend OTP");
+        }
     };
 
     const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
@@ -102,6 +143,7 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
             <Animated.View style={[styles.section, { transform: [{ translateY: formTranslateY }] }]}>
                 <Text style={styles.title}>Login OTP</Text>
                 <Text style={styles.subtitle}>OTP sent to +91 {phone}</Text>
+                {debugOtp ? <Text style={styles.demoHint}>Demo OTP: {debugOtp}</Text> : null}
 
                 <TouchableOpacity activeOpacity={1} onPress={() => otpInputRef.current?.focus()}>
                     <TextInput
@@ -154,6 +196,11 @@ const styles = StyleSheet.create({
     section: { padding: 20 },
     title: { fontSize: 28, fontWeight: "800", marginBottom: 6 },
     subtitle: { color: "#777", marginBottom: 20 },
+    demoHint: {
+        color: "#2A7DE1",
+        marginBottom: 10,
+        fontWeight: "700",
+    },
     hiddenInput: { position: "absolute", opacity: 0 },
     otpRow: { flexDirection: "row", gap: 10, marginBottom: 15 },
     otpBox: {

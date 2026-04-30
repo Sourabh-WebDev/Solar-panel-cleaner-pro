@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { technicianStats } from "../../../shared/api/api";
 import TechnicianScreenHeader from "../../../shared/components/TechnicianScreenHeader";
+import { signOutCurrentUser } from "../../../shared/services/auth";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
 import { incomingRequests } from "../data/mockData";
 import type { TechnicianRootStackParamList, TechnicianTabParamList } from "../navigation/types";
@@ -372,7 +373,13 @@ export default function ProfileScreen({ navigation }: Props) {
                     </Pressable>
                 </View>
 
-                <Pressable style={styles.button} onPress={() => navigation.replace("Login")}>
+                <Pressable
+                    style={styles.button}
+                    onPress={async () => {
+                        await signOutCurrentUser();
+                        navigation.replace("Login");
+                    }}
+                >
                     <Ionicons name="log-out-outline" size={18} color="#fff" />
                     <Text style={styles.buttonText}>Log out</Text>
                 </Pressable>

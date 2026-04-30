@@ -4,7 +4,12 @@ export type RootStackParamList = {
     Splash: undefined;
     Login: undefined;
     Register: undefined;
-    VerifyOTP: { phone: string; mode: "login" | "register" };
+    VerifyOTP: {
+        phone: string;
+        mode: "login" | "register";
+        otpRequestId: string;
+        devOtp?: string;
+    };
     MainTabs: undefined;
     Notifications: undefined;
     ServicesList: undefined;

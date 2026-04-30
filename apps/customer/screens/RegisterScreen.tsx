@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { sendOtp } from "../../../shared/services/auth";
 import { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Register">;
@@ -22,6 +23,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "Register">;
 export default function RegisterScreen({ navigation }: Props) {
     const [phone, setPhone] = useState("");
     const [sending, setSending] = useState(false);
+    const [error, setError] = useState("");
 
     const formTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -54,14 +56,27 @@ export default function RegisterScreen({ navigation }: Props) {
         };
     }, []);
 
-    const handleSendOtp = () => {
-        if (!phone.trim()) return;
+    const handleSendOtp = async () => {
+        if (!phone.trim()) {
+            setError("Enter phone number");
+            return;
+        }
 
-        setSending(true);
-        setTimeout(() => {
+        try {
+            setError("");
+            setSending(true);
+            const result = await sendOtp({ phone, role: "customer" });
+            navigation.navigate("VerifyOTP", {
+                phone,
+                mode: "register",
+                otpRequestId: result.requestId,
+                devOtp: result.devOtp,
+            });
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to send OTP");
+        } finally {
             setSending(false);
-            navigation.navigate("VerifyOTP", { phone, mode: "register" });
-        }, 500);
+        }
     };
 
     return (
@@ -111,6 +126,8 @@ export default function RegisterScreen({ navigation }: Props) {
                         onChangeText={setPhone}
                     />
                 </View>
+
+                {error ? <Text style={styles.error}>{error}</Text> : null}
 
                 {/* Button */}
                 <TouchableOpacity
@@ -248,5 +265,11 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "#aaa",
         paddingBottom: 20,
+    },
+
+    error: {
+        color: "#E53935",
+        marginTop: -16,
+        marginBottom: 14,
     },
 });

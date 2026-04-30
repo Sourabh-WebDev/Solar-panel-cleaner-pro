@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { signOutCurrentUser } from "../../../shared/services/auth";
 import { colors, radius, shadow, spacing, typography } from "../../../shared/utils/ui";
 import { useCustomerProfile, type CustomerProfile } from "../context/CustomerProfileContext";
 
@@ -113,7 +114,8 @@ export default function ProfileScreen() {
             {
                 text: "Logout",
                 style: "destructive",
-                onPress: () => {
+                onPress: async () => {
+                    await signOutCurrentUser();
                     resetProfile();
                     navigation.getParent()?.reset({
                         index: 0,

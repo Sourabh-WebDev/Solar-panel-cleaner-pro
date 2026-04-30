@@ -14,7 +14,7 @@ export type TechnicianJob = {
 export type TechnicianRootStackParamList = {
     Splash: undefined;
     Login: undefined;
-    VerifyOTP: { phone: string };
+    VerifyOTP: { phone: string; otpRequestId: string; devOtp?: string };
     LocationPermission: undefined;
     MainTabs: undefined;
     JobRequestPopup: { job: TechnicianJob };

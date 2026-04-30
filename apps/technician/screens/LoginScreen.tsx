@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { sendOtp } from "../../../shared/services/auth";
 import type { TechnicianRootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<TechnicianRootStackParamList, "Login">;
@@ -22,6 +23,7 @@ type Props = NativeStackScreenProps<TechnicianRootStackParamList, "Login">;
 export default function LoginScreen({ navigation }: Props) {
     const [phone, setPhone] = useState("");
     const [sending, setSending] = useState(false);
+    const [error, setError] = useState("");
 
     const formTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -39,13 +41,26 @@ export default function LoginScreen({ navigation }: Props) {
         return () => { showSub.remove(); hideSub.remove(); };
     }, []);
 
-    const handleSendOtp = () => {
-        if (!phone.trim()) return;
-        setSending(true);
-        setTimeout(() => {
+    const handleSendOtp = async () => {
+        if (!phone.trim()) {
+            setError("Enter phone number");
+            return;
+        }
+
+        try {
+            setError("");
+            setSending(true);
+            const result = await sendOtp({ phone, role: "technician" });
+            navigation.navigate("VerifyOTP", {
+                phone,
+                otpRequestId: result.requestId,
+                devOtp: result.devOtp,
+            });
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to send OTP");
+        } finally {
             setSending(false);
-            navigation.navigate("VerifyOTP", { phone });
-        }, 500);
+        }
     };
 
     return (
@@ -82,6 +97,8 @@ export default function LoginScreen({ navigation }: Props) {
                         onChangeText={setPhone}
                     />
                 </View>
+
+                {error ? <Text style={styles.error}>{error}</Text> : null}
 
                 <TouchableOpacity activeOpacity={0.8} onPress={handleSendOtp} disabled={sending}>
                     <LinearGradient
@@ -161,5 +178,10 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontWeight: "700",
+    },
+    error: {
+        color: "#E53935",
+        marginTop: -16,
+        marginBottom: 14,
     },
 });

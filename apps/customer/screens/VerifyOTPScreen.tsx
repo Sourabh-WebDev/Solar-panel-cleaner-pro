@@ -15,17 +15,20 @@ import {
     View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { resendOtp, sendOtp, verifyOtp } from "../../../shared/services/auth";
 import { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VerifyOTP">;
 
 export default function VerifyOTPScreen({ route, navigation }: Props) {
-    const { phone, mode } = route.params;
+    const { phone, mode, devOtp } = route.params;
 
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
     const [error, setError] = useState("");
     const [secondsLeft, setSecondsLeft] = useState(120);
+    const [otpRequestId, setOtpRequestId] = useState(route.params.otpRequestId);
+    const [debugOtp, setDebugOtp] = useState(devOtp ?? "");
 
     const formTranslateY = useRef(new Animated.Value(0)).current;
     const otpInputRef = useRef<TextInput>(null);
@@ -70,8 +73,8 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
         };
     }, []);
 
-    const handleVerify = () => {
-        if (!otp.trim()) {
+    const handleVerify = async () => {
+        if (otp.trim().length !== 4) {
             setError("Enter OTP");
             return;
         }
@@ -79,18 +82,48 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
         setError("");
         setVerifying(true);
 
-        setTimeout(() => {
+        const result = await verifyOtp({
+            requestId: otpRequestId,
+            otp,
+            role: "customer",
+        });
+
+        if (!result.ok) {
             setVerifying(false);
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "MainTabs" }],
-            });
-        }, 600);
+            setError(result.message ?? "OTP verification failed");
+            return;
+        }
+
+        setVerifying(false);
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "MainTabs" }],
+        });
     };
 
-    const handleResend = () => {
-        setError("");
-        setSecondsLeft(120);
+    const handleResend = async () => {
+        try {
+            setError("");
+            const resent = await resendOtp(otpRequestId);
+            setOtpRequestId(resent.requestId);
+            setSecondsLeft(resent.expiresInSec);
+            setDebugOtp(resent.devOtp ?? "");
+            setOtp("");
+            return;
+        } catch {
+            // If old request expired, create a new OTP request.
+        }
+
+        try {
+            const created = await sendOtp({ phone, role: "customer" });
+            setOtpRequestId(created.requestId);
+            setSecondsLeft(created.expiresInSec);
+            setDebugOtp(created.devOtp ?? "");
+            setOtp("");
+            setError("");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to resend OTP");
+        }
     };
 
     const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
@@ -134,6 +167,10 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
                 <Text style={styles.subtitle}>
                     OTP sent to +91 {phone}
                 </Text>
+
+                {debugOtp ? (
+                    <Text style={styles.demoHint}>Demo OTP: {debugOtp}</Text>
+                ) : null}
 
                 {/* OTP Boxes */}
                 <TouchableOpacity
@@ -239,6 +276,12 @@ const styles = StyleSheet.create({
     subtitle: {
         color: "#777",
         marginBottom: 20,
+    },
+
+    demoHint: {
+        color: "#2A7DE1",
+        marginBottom: 10,
+        fontWeight: "700",
     },
 
     hiddenInput: {

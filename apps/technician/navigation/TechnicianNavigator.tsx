@@ -21,6 +21,7 @@ import LoginScreen from "../screens/LoginScreen";
 import MapScreen from "../screens/MapScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import SplashScreen from "../screens/SplashScreen";
+import VerifyOTPScreen from "../screens/VerifyOTPScreen";
 import type { TechnicianRootStackParamList, TechnicianTabParamList } from "./types";
 
 const Stack = createNativeStackNavigator<TechnicianRootStackParamList>();
@@ -131,6 +132,7 @@ export default function TechnicianNavigator() {
             <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
                 <Stack.Screen name="LocationPermission" component={LocationPermissionScreen} />
                 <Stack.Screen name="MainTabs" component={TechnicianTabs} />
                 <Stack.Screen

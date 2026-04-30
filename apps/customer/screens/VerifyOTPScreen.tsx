@@ -96,7 +96,7 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
     const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
     const seconds = String(secondsLeft % 60).padStart(2, "0");
 
-    const otpDigits = Array.from({ length: 6 }, (_, i) => otp[i] ?? "");
+    const otpDigits = Array.from({ length: 4 }, (_, i) => otp[i] ?? "");
 
     return (
         <KeyboardAvoidingView
@@ -144,7 +144,7 @@ export default function VerifyOTPScreen({ route, navigation }: Props) {
                         ref={otpInputRef}
                         value={otp}
                         onChangeText={(v) =>
-                            setOtp(v.replace(/\D/g, "").slice(0, 6))
+                            setOtp(v.replace(/\D/g, "").slice(0, 4))
                         }
                         keyboardType="number-pad"
                         style={styles.hiddenInput}

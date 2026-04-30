@@ -37,7 +37,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -59,7 +59,9 @@
           }
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-asset",
+      "expo-web-browser"
     ],
     "experiments": {
       "reactCompiler": true
